@@ -21,8 +21,8 @@ namespace BracketLibraryInventorPlugin.Services
         private readonly BracketPartFactory _factory;
         private readonly BracketFeatureBuilder _featureBuilder;
 
-        private static readonly string LibraryDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        private static readonly string LibraryDir = System.IO.Path.Combine(
+            System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),
             "MCG_BracketLibrary", "parts");
 
         public BracketInsertionService(global::Inventor.Application app)

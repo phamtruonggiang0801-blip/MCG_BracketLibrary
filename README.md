@@ -15,16 +15,19 @@ Thư viện bracket tham số cho Autodesk Inventor. Người dùng:
 > calibrate với panel thật). Phần gấp lip có fillet + sniped-end 2 đầu lip **chưa hoàn thiện** —
 > xem [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §"Việc còn lại".
 
-## Build
+## Build & chạy
 
 ```
 dotnet build -c Debug          # cần Inventor 2023 tại C:\Program Files\Autodesk\Inventor 2023
 ```
 
+Trạng thái: **build OK, 0 error** (đã verify trên máy có Inventor 2023 + .NET 10 SDK).
 MSBuild tự deploy DLL + `.addin` vào `C:\CustomTools\Inventor\MCG_BracketLibrary\`.
-Chạy `Install_AutoLoadInventorAddin.bat` một lần để add-in auto-load, rồi khởi động lại Inventor.
+Chạy `Install_AutoLoadInventorAddin.bat` một lần, rồi **khởi động lại Inventor**.
 
-Nút: tab **MCG TOOLS** → panel **Model** → **Bracket Library** (hiện trên cả Part và Assembly ribbon).
+Nút: tab **MCG TOOLS** → panel **Model** → **Bracket Library** (Part + Assembly ribbon).
+
+👉 Hướng dẫn test chi tiết + checklist chỗ dễ hỏng: **[docs/TESTING.md](docs/TESTING.md)**.
 
 ## Cấu trúc
 

@@ -30,11 +30,11 @@ namespace BracketLibraryInventorPlugin.Interop
         public static BracketParameters Read(PartComponentDefinition partDef)
         {
             var map = new Dictionary<string, double>();
-            foreach (Parameter prm in partDef.Parameters.UserParameters)
+            foreach (UserParameter prm in partDef.Parameters.UserParameters)
             {
                 // Length parameters: Value = cm nội bộ → đổi ra mm. Lip_Fold_Dir: unitless.
-                double val = prm.Name == "Lip_Fold_Dir" ? prm.Value : InventorUnits.Mm(prm.Value);
-                map[prm.Name] = val;
+                double raw = Convert.ToDouble(prm.Value);
+                map[prm.Name] = prm.Name == "Lip_Fold_Dir" ? raw : InventorUnits.Mm(raw);
             }
             return BracketParameters.FromParameterMap(map);
         }
@@ -43,7 +43,7 @@ namespace BracketLibraryInventorPlugin.Interop
         {
             try
             {
-                Parameter existing = up[name];
+                UserParameter existing = up[name];
                 existing.Expression = expr;
             }
             catch

@@ -78,8 +78,8 @@ namespace BracketLibraryInventorPlugin.Interop
             var r = CreateUnsaved(def, p);
             try
             {
-                Directory.CreateDirectory(libraryDir);
-                r.FilePath = Path.Combine(libraryDir, $"{def.PartCode}_{DateTime.Now:yyyyMMdd_HHmmss}.ipt");
+                System.IO.Directory.CreateDirectory(libraryDir);
+                r.FilePath = System.IO.Path.Combine(libraryDir, $"{def.PartCode}_{DateTime.Now:yyyyMMdd_HHmmss}.ipt");
                 r.Document.SaveAs(r.FilePath, false);
                 return r;
             }

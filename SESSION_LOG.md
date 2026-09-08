@@ -1,6 +1,29 @@
 # SESSION LOG — MCG_BracketLibrary
 
-## Session 2026-09-08 — Scaffold bản demo (Phase 0)
+## Session 2026-09-08 (b) — Build xanh + deploy + TESTING.md
+
+### Đã làm
+- `dotnet build -c Debug` trên máy có Inventor 2023 + .NET 10 SDK → **Build succeeded, 0 error**.
+- Sửa 6 lỗi biên dịch interop:
+  - `Path` / `Environment` ambiguous với `Inventor.Path` / `Inventor.Environment`
+    → fully-qualify `System.IO.Path` / `System.Environment` (`BracketInsertionService`, `BracketPartFactory`).
+  - `BracketParameterBinder`: iterate `UserParameter` (không phải `Parameter`); `Convert.ToDouble(prm.Value)`;
+    `up[name]` trả `UserParameter`.
+- `Install_AutoLoadInventorAddin.bat` → `xcopy` cả folder (DLL + .addin) sang `%APPDATA%\...\Addins\`
+  (giống MCG_CheckListInventor). Đã deploy thử.
+- Thêm `docs/TESTING.md` — hướng dẫn build/cài/nạp + kịch bản test tối thiểu + checklist chỗ dễ hỏng.
+
+### Trạng thái
+- Phase 0 + build xanh. Add-in đã copy vào Addins folder — **chưa nạp/test trong Inventor**
+  (Inventor đang chạy, cần restart để nạp).
+
+### Bước tiếp theo
+- Restart Inventor → verify add-in Loaded (Tools ▸ Add-Ins) → mở palette → chèn thử 1 OB.
+- Sửa theo checklist `docs/TESTING.md` §5 (arc bulge, FaceProxy, lip fold).
+
+---
+
+## Session 2026-09-08 (a) — Scaffold bản demo (Phase 0)
 
 ### Đã làm
 - Khởi tạo repo `C:\Users\truonph\Desktop\MCG\Inventor\MCG_BracketLibrary`.
