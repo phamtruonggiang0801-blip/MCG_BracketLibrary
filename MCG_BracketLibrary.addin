@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Deploy: %APPDATA%\Autodesk\Inventor 2023\Addins\MCG_BracketLibrary\  (via Install_AutoLoadInventorAddin.bat) -->
+<Addin Type="Standard">
+  <ClassId>{7f3a9c21-5b84-4e16-a9d2-3c6e8f1b40a7}</ClassId>
+  <ClientId>{7f3a9c21-5b84-4e16-a9d2-3c6e8f1b40a7}</ClientId>
+
+  <DisplayName>MCG Bracket Library</DisplayName>
+  <Description>Parametric bracket library for Autodesk Inventor. Pick a bracket type, pick a web face + reference edge, tune the parameters, and insert the bracket as a component (assembly) or feature (part).</Description>
+
+  <Assembly>MCG_BracketLibrary.dll</Assembly>
+
+  <!-- Inventor 2023 = 27.x -->
+  <SupportedSoftwareVersionGreaterThan>26..</SupportedSoftwareVersionGreaterThan>
+
+  <LoadOnStartUp>1</LoadOnStartUp>
+  <UserUnloadable>1</UserUnloadable>
+  <Hidden>0</Hidden>
+</Addin>

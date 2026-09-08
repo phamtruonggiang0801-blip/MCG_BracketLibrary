@@ -1,0 +1,106 @@
+<UserControl x:Class="BracketLibraryInventorPlugin.Views.BracketLibraryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="720" d:DesignWidth="380"
+             Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"
+             Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
+             FontFamily="Segoe UI" FontSize="11">
+
+    <UserControl.Resources>
+        <Style TargetType="TextBox">
+            <Setter Property="Padding" Value="3"/>
+            <Setter Property="Margin" Value="0,1"/>
+        </Style>
+        <Style x:Key="Lbl" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+        </Style>
+        <Style x:Key="H2" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,10,0,4"/>
+            <Setter Property="Foreground" Value="#FF0078D4"/>
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="12">
+
+            <TextBlock Text="MCG BRACKET LIBRARY" FontSize="14" FontWeight="Bold"/>
+            <TextBlock Text="Chọn loại · pick mặt Web + cạnh · chỉnh Parameter · Chèn"
+                       Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" FontSize="9"/>
+
+            <!-- 1. Loại bracket -->
+            <TextBlock Style="{StaticResource H2}" Text="1 · Loại bracket"/>
+            <ComboBox x:Name="CboType" ItemsSource="{Binding Definitions}" SelectedItem="{Binding SelectedDefinition}"
+                      DisplayMemberPath="DisplayName" Height="26"/>
+            <TextBlock Text="{Binding NotesText}" TextWrapping="Wrap" FontSize="9" Margin="0,4,0,0"
+                       Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+
+            <!-- 2. Vị trí -->
+            <TextBlock Style="{StaticResource H2}" Text="2 · Vị trí chèn"/>
+            <Button x:Name="BtnPick" Content="Pick vị trí  (mặt Web → cạnh tham chiếu)" Height="28" Click="BtnPick_Click"/>
+            <CheckBox x:Name="ChkFlip" Content="Đảo hướng member (điểm cuối cạnh làm gốc)"
+                      IsChecked="{Binding FlipMemberDir}" Margin="0,4,0,0"/>
+            <CheckBox x:Name="ChkAutoH" Content="Tự lấy Web_Height từ mặt pick"
+                      IsChecked="{Binding AutoWebHeightFromPick}" Margin="0,2,0,0"/>
+            <TextBlock Text="{Binding LocationText}" TextWrapping="Wrap" FontSize="9" Margin="0,4,0,0"
+                       Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                <RadioButton x:Name="RbAsm" Content="Assembly (component)" GroupName="ctx"
+                             IsChecked="{Binding ContextIsAssembly}" Margin="0,0,10,0"/>
+                <RadioButton x:Name="RbPart" Content="Part (feature)" GroupName="ctx"/>
+            </StackPanel>
+
+            <!-- 3. Thông số (Parameter) -->
+            <TextBlock Style="{StaticResource H2}" Text="3 · Thông số  (mm — thành Inventor Parameter)"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="130"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Style="{StaticResource Lbl}" Text="Span_S"/>
+                <TextBox   Grid.Row="0" Grid.Column="1" Text="{Binding SpanS, UpdateSourceTrigger=LostFocus}"/>
+
+                <TextBlock Grid.Row="1" Style="{StaticResource Lbl}" Text="Web_Height"/>
+                <TextBox   Grid.Row="1" Grid.Column="1" Text="{Binding WebHeight, UpdateSourceTrigger=LostFocus}"/>
+
+                <TextBlock Grid.Row="2" Style="{StaticResource Lbl}" Text="Member_Height"/>
+                <TextBox   Grid.Row="2" Grid.Column="1" Text="{Binding MemberHeight, UpdateSourceTrigger=LostFocus}"/>
+
+                <TextBlock Grid.Row="3" Style="{StaticResource Lbl}" Text="Flange_Overhang"/>
+                <TextBox   Grid.Row="3" Grid.Column="1" Text="{Binding FlangeOverhang, UpdateSourceTrigger=LostFocus}"/>
+
+                <TextBlock Grid.Row="4" Style="{StaticResource Lbl}" Text="Plate_Thickness"/>
+                <TextBox   Grid.Row="4" Grid.Column="1" Text="{Binding PlateThickness, UpdateSourceTrigger=LostFocus}"/>
+
+                <TextBlock Grid.Row="5" Style="{StaticResource Lbl}" Text="Lip_Fold_Dir (±1)"/>
+                <TextBox   Grid.Row="5" Grid.Column="1" Text="{Binding LipFoldDirection, UpdateSourceTrigger=LostFocus}"/>
+            </Grid>
+
+            <!-- 4. Derived -->
+            <TextBlock Style="{StaticResource H2}" Text="4 · Giá trị dẫn xuất (đọc)"/>
+            <Border BorderThickness="1" CornerRadius="3" Padding="6"
+                    BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}"
+                    Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+                <TextBlock Text="{Binding DerivedText}" FontFamily="Consolas" FontSize="10" TextWrapping="Wrap"/>
+            </Border>
+            <TextBlock Text="{Binding WarningText}" Foreground="#FFD32F2F" TextWrapping="Wrap"
+                       FontSize="10" Margin="0,4,0,0"/>
+
+            <!-- 5. Chèn -->
+            <Button x:Name="BtnInsert" Content="CHÈN BRACKET" Height="34" Margin="0,12,0,0"
+                    FontWeight="Bold" Background="#FF228B22" Foreground="White" BorderThickness="0"
+                    IsEnabled="{Binding CanInsert}" Click="BtnInsert_Click"/>
+            <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" FontSize="10" Margin="0,6,0,0"
+                       Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

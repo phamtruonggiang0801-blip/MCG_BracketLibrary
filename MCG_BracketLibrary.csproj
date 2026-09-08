@@ -1,0 +1,83 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- ================================================================== -->
+  <!-- MCG Bracket Library — Inventor Add-in (DEMO / review scaffold)      -->
+  <!-- Inventor 2023+ | C# | .NET Framework 4.8 | WPF (HwndSource) | x64   -->
+  <!-- ================================================================== -->
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <UseWPF>true</UseWPF>
+    <LangVersion>latest</LangVersion>
+    <Platforms>x64</Platforms>
+    <AssemblyName>MCG_BracketLibrary</AssemblyName>
+    <RootNamespace>BracketLibraryInventorPlugin</RootNamespace>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
+    <!-- Chỉnh 2 dòng dưới nếu máy build dùng Inventor phiên bản khác -->
+    <InventorPath>C:\Program Files\Autodesk\Inventor 2023\Bin</InventorPath>
+    <CustomToolsDir>C:\CustomTools\Inventor</CustomToolsDir>
+    <CustomToolsAddinDir>$(CustomToolsDir)\$(AssemblyName)</CustomToolsAddinDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Autodesk.Inventor.Interop">
+      <HintPath>$(InventorPath)\Public Assemblies\Autodesk.Inventor.Interop.dll</HintPath>
+      <Private>False</Private>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="stdole">
+      <HintPath>$(InventorPath)\stdole.dll</HintPath>
+      <Private>False</Private>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="WindowsFormsIntegration" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\icon16.png" Condition="Exists('Resources\icon16.png')" />
+    <EmbeddedResource Include="Resources\icon32.png" Condition="Exists('Resources\icon32.png')" />
+  </ItemGroup>
+
+  <!-- Copy .addin manifest vào output folder -->
+  <Target Name="CopyAddinFile" AfterTargets="Build">
+    <Copy SourceFiles="$(ProjectDir)MCG_BracketLibrary.addin"
+          DestinationFolder="$(OutputPath)"
+          OverwriteReadOnlyFiles="true" />
+  </Target>
+
+  <!-- Deploy DLL + dependency + .addin vào C:\CustomTools\Inventor\MCG_BracketLibrary\ -->
+  <Target Name="DeployToCustomTools" AfterTargets="Build">
+    <MakeDir Directories="$(CustomToolsAddinDir)" />
+    <ItemGroup>
+      <_DeployDlls Include="$(OutputPath)*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_DeployDlls)"
+          DestinationFolder="$(CustomToolsAddinDir)"
+          OverwriteReadOnlyFiles="true"
+          ContinueOnError="true" />
+    <Copy SourceFiles="$(ProjectDir)MCG_BracketLibrary.addin"
+          DestinationFolder="$(CustomToolsAddinDir)"
+          OverwriteReadOnlyFiles="true"
+          ContinueOnError="true" />
+    <Message Text="[Deploy] $(AssemblyName) + dependencies -> $(CustomToolsAddinDir)" Importance="high" />
+  </Target>
+
+  <Target Name="DeployInstallerBat" AfterTargets="Build" Condition="Exists('$(ProjectDir)Install_AutoLoadInventorAddin.bat')">
+    <MakeDir Directories="$(CustomToolsDir)" />
+    <Copy SourceFiles="$(ProjectDir)Install_AutoLoadInventorAddin.bat"
+          DestinationFolder="$(CustomToolsDir)"
+          OverwriteReadOnlyFiles="true"
+          ContinueOnError="true" />
+  </Target>
+
+</Project>
