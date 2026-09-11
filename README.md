@@ -37,7 +37,7 @@ Nút: tab **MCG TOOLS** → panel **Model** → **Bracket Library** (Part + Asse
 | `Models/` | POCO thuần: `BracketType`, `BracketDefinition`, `BracketParameters`, `Profile2D`, `InsertLocation` |
 | `Catalog/` | `BracketCatalog` — danh mục loại + thông số mặc định (nguồn: skill trong `MCG_3DPanel`) |
 | `Geometry/` | Toán thuần, KHÔNG phụ thuộc Inventor: `KneeParameterSolver` (port `BracketBuilder.Solve`), `KneeProfileGenerator` (port `ProfileService`) |
-| `Interop/` | Cầu nối interop: sketch từ outline, `BracketPartFactory`, `ComponentPlacer`, `BracketFeatureBuilder`, `WebFaceLocationPicker` |
+| `Interop/` | Cầu nối interop: sketch từ outline, `BracketPartFactory`, `ComponentPlacer`, `BracketFeatureBuilder`, `BracketLocationPicker` + `GeometryMeasure` |
 | `Services/` | `BracketInsertionService` — điều phối (không chứa hình học) |
 | `Views/` | WPF palette + ViewModel |
 

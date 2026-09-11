@@ -37,8 +37,9 @@ thành SketchLine/SketchArc rồi Extrude.
 ```
         ┌─────────────── WPF palette (Views/) ───────────────┐
         │  1. ComboBox loại   → BracketCatalog.Get(type)      │
-        │  2. [Pick vị trí]   → WebFaceLocationPicker         │
+        │  2. [Pick vị trí]   → BracketLocationPicker         │
         │  3. 6 ô Parameter   → BracketParameters (mm)        │
+        │     (auto-đo từ pick nếu chọn thêm Flange/HP)       │
         │  4. bảng "Derived"  ← KneeSolution (đọc)            │
         │  5. [CHÈN]                                          │
         └───────────────────────┬────────────────────────────┘
@@ -105,7 +106,8 @@ Hệ local outline: gốc (0,0) → Anchor; +X → MemberDir; −Y (outline đi 
 | `Interop/LipFoldBuilder.cs` | gấp lip dọc free-edge | `BracketBuilder.TryAddBendLip` (CHƯA đủ) |
 | `Interop/BracketPartFactory.cs` | .ipt: params + sketch + extrude + lip + iProps | `BracketBuilder.Build` (phần dựng solid) |
 | `Interop/ComponentPlacer.cs` | place occurrence theo matrix | `BracketBuilder.BracketPlacement` (Matrix3d) |
-| `Interop/WebFaceLocationPicker.cs` | pick mặt Web + cạnh → InsertLocation | `BracketBuilder.AnchorDir` (thủ công thay vì auto) |
+| `Interop/BracketLocationPicker.cs` | multi-pick (Web+cạnh bắt buộc; Flange/HP tuỳ chọn) → InsertLocation + số đo | `BracketBuilder.AnchorDir` (thủ công thay vì auto) |
+| `Interop/GeometryMeasure.cs` | đo mặt/cạnh Inventor (span, reach, k/c điểm–mặt) → mm | — (Phase 5a) |
 
 **Thêm nhóm bracket mới** = thêm 1 `IBracketProfileGenerator` + 1 dòng `BracketCatalog`. Không sửa nhóm khác.
 
@@ -170,3 +172,151 @@ Giống `MCG_CheckListInventor`:
 - `Install_AutoLoadInventorAddin.bat` copy `.addin` vào `%APPDATA%\Autodesk\Inventor 2023\Addins\...`.
 - File `.ipt` bracket sinh ra lưu ở `%LOCALAPPDATA%\MCG_BracketLibrary\parts\<mã>_<timestamp>.ipt`
   (Phase 4: cho user chọn thư mục / theo project Vault).
+
+---
+
+## 10. Đề xuất Phase 5 — Pick hình học nhiều mặt/cạnh → bỏ nhập tham số
+
+**Trạng thái:** 5a code xong 2026-09-08 (chưa verify Inventor). Đọc kèm `docs/BRACKET-PARAMETERS.md`.
+
+### 10.1 Hình học thật — CONFIG 2 (đã chốt với user 2026-09-08)
+
+⚠️ Scaffold Phase 0 giả định **config 1** (bracket NẰM TRONG mặt phẳng Web, vươn dọc cạnh top).
+Mô hình thật của user là **config 2**:
+
+- Web và HP là **2 tấm đứng SONG SONG**, cách nhau `Span_S` (~450).
+- Tấm bracket nằm trong mặt phẳng **VUÔNG GÓC mặt Web**, bắc từ Web sang HP.
+- Hệ local: `+X member` = **pháp tuyến mặt Web** (hướng về HP) · `+Y up` = **+Z thế giới** ·
+  `+Z PlaneNormal` = `member × up` (dọc thân tàu, = hướng dày tấm).
+
+| Đo | Cách (config 2) |
+|---|---|
+| `Span_S` | k/c vuông góc mặt phẳng Web ↔ mặt phẳng HP |
+| `Web_Height` | k/c theo `up` từ gốc (mức TopPlate) ↔ mặt phẳng Flange |
+| `Flange_Overhang` | đỉnh flange chìa xa nhất khỏi **mặt phẳng Web** dọc `member` (phía HP) |
+| `Member_Height` | bề rộng trải mặt HP theo `up` |
+
+### 10.2 Luồng pick (5a — đã code)
+
+```text
+PLAN (nhìn từ trên):  Web ∥ HP, cách Span_S
+        ┌── click ĐIỂM trên cạnh Web∩TopPlate  (vị trí bracket dọc Y)
+        v
+   ═════╪═══════════ TOP PLATE ═══════════════
+        │  MẶT WEB                    MẶT HP
+        │  (pháp tuyến = member →)    (∥ Web)
+        │  |<──────── Span_S ────────>|
+      x=Xweb                       x=Xhp
+
+ELEVATION (mặt phẳng bracket, chứa member + up):
+   (gốc)·────────── Span_S ──────────·   ← Top Plate  (z = z_click)
+        │╲                          (toe gần HP)
+   Web_ │ ╲____
+   Hgt  │ /    ╲____
+        ·─┴──────────·──────────────────  ← MẶT FLANGE  (z = z_flange)
+        │<── F ──>|
+      MẶT FLANGE chìa Flange_Overhang khỏi mặt Web
+```
+
+| # | Pick (bắt buộc) | Suy ra |
+|---|---|---|
+| 1 | **Mặt Web** | `member` = pháp tuyến mặt Web |
+| 2 | **Click điểm trên MẶT TOP PLATE** | vị trí bracket (Y); `up` = pháp tuyến TopPlate (lật ra xa Flange, ⊥ member); `PlaneNormal` = member × up. Bỏ giả định +Z → không cần "Lật đứng". |
+| 3 | **Mặt HP** | `Span_S` = k/c mp Web↔HP; quay `member` về phía HP; `Member_Height` = trải HP theo `up` |
+| 4 | **Mặt Flange** | `Web_Height` = k/c Z gốc↔Flange; `Flange_Overhang` = flange chìa khỏi mp Web dọc `member` |
+
+4 pick, 0 ô gõ. `member` không pick HP thì không định hướng được → HP **bắt buộc**.
+Điểm click (bước 2) lấy qua `PointOnEntityPicker` (`InteractionEvents`) — `CommandManager.Pick`
+chỉ trả entity, không trả toạ độ.
+
+### 10.3 Tham số còn phải nhập
+
+| Param | Xử lý |
+|---|---|
+| `Member_Height` | **pick thêm mặt HP/FB** (pick E) → đo chiều sâu profile ⊥ TopPlate. Member không model → dropdown chuẩn (HP100/120/140/160/180/200… · FB…). |
+| `Lip_Fold_Dir` | Hướng gập mép gia cường dọc free-edge — xem **10.3.1**. Không suy từ hình học → **nút "Lật lip"** ở preview. |
+| `Plate_Thickness` | Người dùng chọn **Nhóm** (OB/IB/FB) + **Chiều dày** (dropdown 6/10) — xem **10.3.2**. |
+| 6 ô số cũ | GIỮ LẠI ở vai trò **override** — auto-fill từ pick, cho sửa tay; ai không pick đủ thì gõ phần thiếu. |
+
+#### 10.3.1 `Lip_Fold_Dir` là gì
+
+Khi free-edge (cạnh chéo tự do) đủ dài (`flanged = true`), tool **không để cạnh trần** mà **gập một
+dải mép hẹp (lip / face plate, rộng `LipWidth` ≈ 70–100 mm) vuông góc tấm, chạy dọc free-edge** — để
+chống oằn cạnh tự do, giống thanh thép góc.
+
+Dải này gập được về **một trong hai mặt** của tấm bracket:
+`Lip_Fold_Dir = +1` → về phía local `+Z` · `−1` → phía `−Z`.
+
+Chọn phía nào tuỳ bối cảnh kết cấu (phía có khoảng hở / tránh chi tiết bên cạnh / theo chiều dựng).
+Bản AutoCAD `MCG_3DPanel` suy từ panel type; ở tool này không có panel nên **người dùng chọn** —
+Phase 5 chuyển thành **nút "Lật lip"** trên preview 3D. Chỉ có tác dụng khi `flanged = true`.
+
+> Cân nhắc đổi tên cho dễ hiểu: `Lip_Fold_Dir` → `Edge_Flange_Side`.
+
+#### 10.3.2 Tách catalog: 6 type → 3 nhóm × bậc dày
+
+- **Hiện:** `BracketType` = {OB, OB1, IB, IB1, FB, FB1} — 1 combo dài, chiều dày dính trong loại.
+- **Đề xuất:** 2 combo — **Nhóm** {OB, IB, FB} + **Chiều dày**.
+- **CHỐT (tạm thời):** chiều dày chỉ **2 bậc chuẩn** — không cho gõ tự do, không mở t8/t15/t20:
+
+  | thk | ngưỡng free-edge (`BendThreshold`) | bề rộng lip (`LipWidth`) | Rb = 2·thk | hậu tố mã |
+  |---|---|---|---|---|
+  | **6**  | 350 | 70  | 12 | "OB" / "IB" / "BF" |
+  | **10** | 600 | 100 | 20 | "OB1" / "IB1" / "BF1" |
+
+- `BracketDefinition` bỏ thickness rời rạc → tra bảng trên theo bậc (`PartCode` / `LipWidth` /
+  `BendThreshold`). `BracketType` enum có thể bỏ, chỉ giữ `BracketFamily`.
+- Mở thêm bậc t15→"2", t20→"3" **chỉ khi có bản vẽ chuẩn** cho ngưỡng + bề rộng lip.
+
+### 10.4 Bước preview + chốt hướng (bước 3 mới của UI)
+
+Sau khi đo xong: hiện outline + cho người dùng khử nhập nhằng (Web có 2 mặt; lật lên/xuống; hướng lip).
+
+- **v1 (5b):** vẽ outline **2D trong canvas WPF** của palette (đã có `Profile2D`) + bảng số đo được,
+  kèm nút **Lật mặt / Lật member / Lật lip**. Rẻ, làm ngay.
+- **v2 (5c):** **transient graphics 3D** trong viewport Inventor (`ClientGraphics` /
+  `TransientBRep` + `GraphicsDataSets`); preview bám con trỏ, click để chốt (như Place Component).
+
+### 10.5 Module bổ sung / đổi
+
+| File | Việc | TT |
+|---|---|---|
+| `Interop/BracketLocationPicker.cs` | Viết lại theo **config 2**: Web + click-điểm + HP + Flange (đều bắt buộc); frame member = pháp tuyến Web về phía HP | ✅ 5a |
+| `Interop/PointOnEntityPicker.cs` *(mới)* | `InteractionEvents` — bắt (điểm click + entity); nền cho preview bám con trỏ (5c) | ✅ 5a |
+| `Interop/GeometryMeasure.cs` *(mới)* | Đo span mặt, reach từ mặt phẳng, k/c điểm–mặt → mm; + `Describe*` ghi log chẩn đoán | ✅ 5a |
+| `Models/InsertLocation.cs` | Thêm `MeasuredSpanMm` / `MeasuredFlangeOverhangMm` / `MeasuredMemberHeightMm` | ✅ 5a |
+| `Views/BracketLibraryViewModel.cs` | `PickLocation` auto-fill 4 tham số; `MeasuredText` | ✅ 5a |
+| **FaceProxy transform** (§8.3) | `GeometryMeasure` hiện tin `.Geometry` của proxy đã ở hệ assembly — log 5a xác nhận OK (coords ~49090mm) | ✅ 5a |
+| `Geometry/OutlineTessellator.cs` *(mới)* | `Profile2D` (bulge) → list điểm phẳng | ✅ 5b |
+| `BracketLibraryViewModel.PreviewImage` (`DrawingImage`) + XAML `<Image>` | **Section preview**: bracket outline + Web/TopPlate/Flange/HP context (2 `GeometryDrawing`, Pen riêng) | ✅ 5b |
+| `LipFoldBuilder.cs` | `WorkPlanes.AddFixed` + tiết diện fillet đồng tâm (`AddByCenterStartEndPoint`) + Sniped End + Combine(Join) dung thứ lỗi | ✅ 5b |
+| `Interop/BracketLipEditor.cs` *(mới)* | "Flip lip on selected bracket": xoá feature sau "Plate" → đảo `Lip_Fold_Dir` → dựng lại | ✅ 5b |
+| ViewModel + XAML | Tách combo **Family + Thickness**; nút "Flip lip" / "Flip lip on selected"; UI tiếng Anh | ✅ 5b |
+| Pick #2 = **mặt TopPlate** (không phải cạnh) | `up` = pháp tuyến TopPlate (lật ra xa Flange) → bỏ nút "Lật đứng" | ✅ 5b |
+| ~~Ghost bám con trỏ (5c)~~ | Thử `GhostDragPicker` (InteractionEvents + OverlayClientGraphics) — **user yêu cầu bỏ**. | ❌ bỏ |
+| `BracketDefinition` refactor | 6 type → 3 nhóm; `PartCode/LipWidth/BendThreshold` theo bậc dày (§10.3.2) — hiện vẫn 6-entry, `Get(family, thk)` tra | ⬜ |
+
+### 10.6 Rủi ro
+
+- **FaceProxy trong assembly** (§8.3) — càng nhiều entity pick càng nhiều chỗ phải nhân
+  `occurrence.Transformation`. Gom hết vào `GeometryMeasure`.
+- **Validate quan hệ hình học** — Flange ⊥ Web? cạnh // TopPlate? coplanar? → báo lỗi rõ ràng
+  ("Mặt Flange không vuông góc mặt Web — chọn lại").
+- **Member không model đúng profile** → luôn giữ đường override thủ công.
+- **Span_S** đo tới mặt HP ≠ độ vươn thật của bracket (thường trừ khe hở) → cho 1 ô offset.
+- `Dtop`/toe span-end phụ thuộc `Member_Height` — đo sai chiều cao HP thì toe lệch.
+
+### 10.7 Phân nhỏ
+
+- **5a** ✅ *(2026-09-08)* — pick config-2 (Web + click-điểm + HP + Flange) + đo 4 tham số, auto-fill.
+  Chèn plate OK (E_INVALIDARG session c đã hết). **Chưa verify số đo config-2 trong Inventor.**
+- **5b** ✅ *(2026-09-08/09)* — section preview (bracket + context Web/TopPlate/Flange/HP), tách combo
+  Family/Thickness, nút Flip lip (+ on selected), pick #2 = mặt TopPlate, UI tiếng Anh, lip fillet.
+- **5c** ❌ — ghost bám con trỏ: đã thử, **user yêu cầu bỏ**.
+
+**Còn nợ:**
+
+- ✅ **Lip fold** (2026-09-08): `LipFoldBuilder` v5 — tiết diện gấp có fillet (`AddByCenterStartEndPoint`
+  đồng tâm) → body riêng → Combine(Join) → sniped 2 đầu. Log `joined sniped`, OK.
+- ✅ Verify số đo config-2: `span=474 webH=374 overhang=107 memberH=120` — đúng.
+- Preview 5b (canvas 2D xong, chưa test) · nút Lật · tách combo Nhóm/Chiều dày · ghost 5c.

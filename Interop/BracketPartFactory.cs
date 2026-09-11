@@ -64,7 +64,11 @@ namespace BracketLibraryInventorPlugin.Interop
 
             if (k.Flanged)
             {
-                try { LipFoldBuilder.TryAdd(partDef, xyPlane, outline.FreeEdge, k, tg); }
+                try
+                {
+                    string note = LipFoldBuilder.TryAdd(_app, partDef, outline, outline.FreeEdge, k);
+                    FileLogger.Log(LOG, $"{def.PartCode}: {note}");
+                }
                 catch (Exception ex) { FileLogger.LogException(LOG, "lip fold", ex); }
             }
 

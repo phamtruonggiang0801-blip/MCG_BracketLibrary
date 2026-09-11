@@ -45,12 +45,15 @@ C:\Users\truonph\Desktop\MCG\Inventor\MCG_BracketLibrary\Install_AutoLoadInvento
 1. Tạo assembly mới, chèn 1 part có 1 mặt phẳng đứng lớn (giả lập Web) — hoặc mở 1 assembly kết cấu thật.
 2. Mở palette Bracket Library.
 3. **1 · Loại** → chọn `OB — Outer Bracket (t6)`.
-4. **2 · Vị trí** → bấm **Pick vị trí**:
-   - Click 1 **mặt phẳng** (Web) → con trỏ đổi sang chọn cạnh.
-   - Click 1 **cạnh thẳng** — điểm ĐẦU cạnh = gốc bracket, hướng cạnh = ra phía HP/mép.
-   - (nếu hướng ngược ý muốn → tick "Đảo hướng member" rồi Pick lại)
-5. **3 · Thông số** → sửa `Member_Height` = 120, `Flange_Overhang` = 90 (hoặc theo vị trí thật).
-   Xem khối **4 · Derived**: `Huse`, `F`, `Dtop`, `free-edge`, `flanged`.
+4. **2 · Vị trí** → bấm **Pick vị trí** (5 bước, prompt hiện trên status bar):
+   - `1/5` Click 1 **mặt phẳng** (Web).
+   - `2/5` Click 1 **cạnh thẳng** (Web ∩ TopPlate) — điểm ĐẦU = gốc, hướng = ra phía HP/mép.
+   - `3/5`–`5/5` **tuỳ chọn** — mặt Flange / cạnh HP∩TopPlate / mặt HP. Nhấn **Esc** để bỏ qua từng cái.
+   - (hướng ngược ý → tick "Đảo hướng member" rồi Pick lại)
+5. **3 · Thông số** → nếu đã pick đủ mặt/cạnh ở bước 4, các ô `Span_S` / `Web_Height` /
+   `Flange_Overhang` / `Member_Height` **tự điền** (dòng xanh "Đã đo từ hình học…"). Kiểm lại,
+   sửa tay các ô còn thiếu. Xem khối **4 · Derived**: `Huse`, `F`, `Dtop`, `free-edge`, `flanged`.
+   - Bỏ tick "Tự đo tham số từ hình học pick" nếu muốn nhập tay toàn bộ như trước.
 6. Chọn radio **Assembly (component)** → bấm **CHÈN BRACKET**.
 7. Kết quả: 1 component `.ipt` mới tên `OB` xuất hiện trong assembly, tại vị trí đã pick.
    File lưu ở `%LOCALAPPDATA%\MCG_BracketLibrary\parts\OB_<timestamp>.ipt`.
@@ -66,8 +69,9 @@ dạng 1 base feature (`OB_bracket`).
 | Triệu chứng | Nghi ngờ | File |
 |---|---|---|
 | Palette trống / lỗi khi mở | ctor `BracketLibraryView` / service | `Views/BracketLibraryView.xaml.cs`, log |
-| Pick không chọn được mặt/cạnh | SelectionFilter, ngữ cảnh doc | `Interop/WebFaceLocationPicker.cs` |
-| Bracket đặt sai vị trí / xoay lệch | matrix từ face/edge; FaceProxy trong assembly chưa transform | `Interop/LocationMatrix.cs`, `WebFaceLocationPicker.cs` |
+| Pick không chọn được mặt/cạnh | SelectionFilter, ngữ cảnh doc | `Interop/BracketLocationPicker.cs` |
+| Bracket đặt sai vị trí / xoay lệch | matrix từ face/edge; FaceProxy trong assembly chưa transform | `Interop/LocationMatrix.cs`, `BracketLocationPicker.cs` |
+| Auto-đo tham số sai (Span_S/Web_Height/Flange_Overhang/Member_Height) | `.Geometry` proxy chưa ở hệ assembly; đo sai dấu/hướng | `Interop/GeometryMeasure.cs` |
 | Extrude lỗi "profile hở" | bulge → arc 3 điểm, đỉnh không khít | `Interop/SketchProfileBuilder.cs` |
 | Cung R30 phình ra thay vì lõm | dấu bulge / hướng sagitta | `SketchProfileBuilder.ArcMidPoint` |
 | Lip sai (góc vuông, không fillet) | **đã biết** — bản demo chưa làm fillet + sniped-end | `Interop/LipFoldBuilder.cs` |

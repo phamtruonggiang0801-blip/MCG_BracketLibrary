@@ -10,7 +10,8 @@ namespace BracketLibraryInventorPlugin.Models
     }
 
     /// <summary>
-    /// Vị trí + hướng đặt bracket, do <c>WebFaceLocationPicker</c> tính ra từ (mặt Web) + (cạnh tham chiếu).
+    /// Vị trí + hướng đặt bracket, do <c>BracketLocationPicker</c> tính ra từ (mặt Web) + (cạnh tham chiếu)
+    /// + (tuỳ chọn) mặt Flange / cạnh HP∩TopPlate / mặt HP để đo tham số.
     /// Thuần số (mm, đơn vị model) — không giữ tham chiếu COM để Models không phụ thuộc Inventor interop.
     ///
     /// Hệ local outline → world:
@@ -30,6 +31,15 @@ namespace BracketLibraryInventorPlugin.Models
 
         /// <summary>Chiều cao Web đo được từ mặt pick (mm). null nếu picker không suy ra được.</summary>
         public double? MeasuredWebHeightMm { get; set; }
+
+        /// <summary>Span_S đo từ cạnh HP/FB ∩ TopPlate — k/c gốc → HP dọc MemberDir (mm). null nếu không pick.</summary>
+        public double? MeasuredSpanMm { get; set; }
+
+        /// <summary>Flange_Overhang đo từ mặt Flange — reach xa nhất từ gốc dọc MemberDir (mm). null nếu không pick.</summary>
+        public double? MeasuredFlangeOverhangMm { get; set; }
+
+        /// <summary>Member_Height đo từ mặt HP/FB — bề rộng trải theo UpDir (mm). null nếu không pick.</summary>
+        public double? MeasuredMemberHeightMm { get; set; }
 
         /// <summary>Nhãn gợi nhớ (VD "Face of Web@Rib3 + Edge") để hiển thị trên UI.</summary>
         public string Label { get; set; } = "(chưa chọn vị trí)";

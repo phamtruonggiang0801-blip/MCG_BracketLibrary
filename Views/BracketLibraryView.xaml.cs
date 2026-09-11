@@ -47,6 +47,18 @@ namespace BracketLibraryInventorPlugin.Views
             }
         }
 
+        private void BtnFlipLip_Click(object sender, RoutedEventArgs e)
+        {
+            try { _vm?.FlipLip(); }
+            catch (Exception ex) { FileLogger.LogException(LOG, "flipLip", ex); }
+        }
+
+        private void BtnFlipLipSel_Click(object sender, RoutedEventArgs e)
+        {
+            try { _vm?.FlipLipOnSelected(); }
+            catch (Exception ex) { FileLogger.LogException(LOG, "flipLipSelected", ex); }
+        }
+
         private void SyncContext()
         {
             if (_vm == null) return;

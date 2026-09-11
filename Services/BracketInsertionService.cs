@@ -17,9 +17,10 @@ namespace BracketLibraryInventorPlugin.Services
         private const string LOG = "[BracketInsertionService]";
 
         private readonly global::Inventor.Application _app;
-        private readonly WebFaceLocationPicker _picker;
+        private readonly BracketLocationPicker _picker;
         private readonly BracketPartFactory _factory;
         private readonly BracketFeatureBuilder _featureBuilder;
+        private readonly ProfileGeneratorRegistry _generators;
 
         private static readonly string LibraryDir = System.IO.Path.Combine(
             System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),
@@ -28,9 +29,9 @@ namespace BracketLibraryInventorPlugin.Services
         public BracketInsertionService(global::Inventor.Application app)
         {
             _app = app;
-            var generators = new ProfileGeneratorRegistry();
-            _picker = new WebFaceLocationPicker(app);
-            _factory = new BracketPartFactory(app, generators);
+            _generators = new ProfileGeneratorRegistry();
+            _picker = new BracketLocationPicker(app);
+            _factory = new BracketPartFactory(app, _generators);
             _featureBuilder = new BracketFeatureBuilder(app, _factory);
         }
 
@@ -40,10 +41,13 @@ namespace BracketLibraryInventorPlugin.Services
             catch (Exception ex) { FileLogger.LogException(LOG, "PickLocation", ex); return null; }
         }
 
-        public (KneeSolution, string) Preview(BracketDefinition def, BracketParameters p)
+        public (KneeSolution, Profile2D, string) Preview(BracketDefinition def, BracketParameters p)
         {
             var k = KneeParameterSolver.Solve(def, p);
-            return (k, KneeParameterSolver.Validate(k));
+            Profile2D outline = null;
+            try { outline = _generators.For(def.Family).Generate(k); }
+            catch (Exception ex) { FileLogger.LogException(LOG, "Preview outline", ex); }
+            return (k, outline, KneeParameterSolver.Validate(k));
         }
 
         public InsertResult Insert(BracketDefinition def, BracketParameters p, InsertLocation location)
@@ -75,7 +79,7 @@ namespace BracketLibraryInventorPlugin.Services
                     if (!(doc is PartDocument part))
                         return Fail("Ngữ cảnh Part nhưng tài liệu đang mở không phải part.");
 
-                    var (k, _) = Preview(def, p);
+                    var (k, _, _) = Preview(def, p);
                     _featureBuilder.Build(part, def, p, location);
                     tx.End();
                     return Ok(k, null, $"Đã thêm feature bracket {def.PartCode} vào part.");
@@ -88,6 +92,8 @@ namespace BracketLibraryInventorPlugin.Services
                 return Fail("Lỗi khi chèn bracket: " + ex.Message);
             }
         }
+
+        public string FlipLipOnSelected() => BracketLipEditor.FlipOnSelected(_app, _generators);
 
         private static InsertResult Ok(KneeSolution k, string path, string msg) =>
             new InsertResult { Success = true, Message = msg, PartFilePath = path, Solution = k };

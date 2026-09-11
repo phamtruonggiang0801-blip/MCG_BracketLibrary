@@ -21,7 +21,7 @@ Web và HP → mở palette, chọn OB, pick mặt Web + cạnh ra phía HP, s�
 ## Kiến trúc (chi tiết: docs/ARCHITECTURE.md)
 
 ```
-Pick (WebFaceLocationPicker)  ─┐
+Pick (BracketLocationPicker)  ─┐
                                ├─► BracketInsertionService (điều phối)
 Thông số (BracketParameters) ──┤        │
                                │        ├─ KneeParameterSolver.Solve  → KneeSolution
@@ -45,6 +45,9 @@ Loại (BracketCatalog)  ────────┘        ├─ KneeProfileGe
   sketch `AddWithOrientation` để feature parametric đầy đủ.
 - **Phase 4 — Mở rộng loại**: GirderEnd (GE1–6), HP-End Bracket "B", Collar Plate — mỗi loại 1
   generator, port từ `GeProfileService` / `HpEndBracketBuilder` / `WebCollarPlateBuilder`.
+- **Phase 5 — Pick hình học, bỏ nhập tham số** *(đề xuất — xem docs/ARCHITECTURE.md §10)*: pick
+  Web + Flange + mặt HP + cạnh Web∩TopPlate → tool đo `Span_S` / `Web_Height` / `Flange_Overhang` /
+  `Member_Height`; preview outline; người dùng chỉ chốt hướng (lật mặt/lip). 6 ô gõ → 0–1.
 
 ## Backlog / rủi ro đã biết
 

@@ -29,33 +29,46 @@
         <StackPanel Margin="12">
 
             <TextBlock Text="MCG BRACKET LIBRARY" FontSize="14" FontWeight="Bold"/>
-            <TextBlock Text="Chọn loại · pick mặt Web + cạnh · chỉnh Parameter · Chèn"
+            <TextBlock Text="Pick type · pick faces · adjust parameters · insert"
                        Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" FontSize="9"/>
 
-            <!-- 1. Loại bracket -->
-            <TextBlock Style="{StaticResource H2}" Text="1 · Loại bracket"/>
-            <ComboBox x:Name="CboType" ItemsSource="{Binding Definitions}" SelectedItem="{Binding SelectedDefinition}"
-                      DisplayMemberPath="DisplayName" Height="26"/>
+            <!-- 1. Type = family + thickness -->
+            <TextBlock Style="{StaticResource H2}" Text="1 · Family + thickness"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="64"/>
+                </Grid.ColumnDefinitions>
+                <ComboBox x:Name="CboFamily" Grid.Column="0" Height="26"
+                          ItemsSource="{Binding Families}" SelectedItem="{Binding SelectedFamily}"/>
+                <ComboBox x:Name="CboThk" Grid.Column="1" Height="26" Margin="6,0,0,0"
+                          ItemsSource="{Binding Thicknesses}" SelectedItem="{Binding SelectedThickness}"/>
+            </Grid>
             <TextBlock Text="{Binding NotesText}" TextWrapping="Wrap" FontSize="9" Margin="0,4,0,0"
                        Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
 
-            <!-- 2. Vị trí -->
-            <TextBlock Style="{StaticResource H2}" Text="2 · Vị trí chèn"/>
-            <Button x:Name="BtnPick" Content="Pick vị trí  (mặt Web → cạnh tham chiếu)" Height="28" Click="BtnPick_Click"/>
-            <CheckBox x:Name="ChkFlip" Content="Đảo hướng member (điểm cuối cạnh làm gốc)"
+            <!-- 2. Location -->
+            <TextBlock Style="{StaticResource H2}" Text="2 · Insert location"/>
+            <Button x:Name="BtnPick" Content="Pick location  (Web → Top Plate → HP → Flange)" Height="28" Click="BtnPick_Click"/>
+            <TextBlock Text="4 picks: (1) Web face  (2) click a point on the Top Plate face = bracket station  (3) HP face  (4) Flange face. Span_S / Web_Height / Flange_Overhang / Member_Height are measured automatically."
+                       TextWrapping="Wrap" FontSize="9" Margin="0,3,0,0"
+                       Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+            <CheckBox x:Name="ChkFlip" Content="Reverse member direction"
                       IsChecked="{Binding FlipMemberDir}" Margin="0,4,0,0"/>
-            <CheckBox x:Name="ChkAutoH" Content="Tự lấy Web_Height từ mặt pick"
-                      IsChecked="{Binding AutoWebHeightFromPick}" Margin="0,2,0,0"/>
+            <CheckBox x:Name="ChkAutoH" Content="Auto-measure parameters from picked geometry"
+                      IsChecked="{Binding AutoMeasureFromPick}" Margin="0,2,0,0"/>
             <TextBlock Text="{Binding LocationText}" TextWrapping="Wrap" FontSize="9" Margin="0,4,0,0"
                        Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+            <TextBlock Text="{Binding MeasuredText}" TextWrapping="Wrap" FontSize="9" Margin="0,2,0,0"
+                       Foreground="#FF0078D4"/>
             <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                 <RadioButton x:Name="RbAsm" Content="Assembly (component)" GroupName="ctx"
                              IsChecked="{Binding ContextIsAssembly}" Margin="0,0,10,0"/>
                 <RadioButton x:Name="RbPart" Content="Part (feature)" GroupName="ctx"/>
             </StackPanel>
 
-            <!-- 3. Thông số (Parameter) -->
-            <TextBlock Style="{StaticResource H2}" Text="3 · Thông số  (mm — thành Inventor Parameter)"/>
+            <!-- 3. Parameters -->
+            <TextBlock Style="{StaticResource H2}" Text="3 · Parameters  (mm — become Inventor Parameters)"/>
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="130"/>
@@ -84,8 +97,21 @@
                 <TextBox   Grid.Row="5" Grid.Column="1" Text="{Binding LipFoldDirection, UpdateSourceTrigger=LostFocus}"/>
             </Grid>
 
-            <!-- 4. Derived -->
-            <TextBlock Style="{StaticResource H2}" Text="4 · Giá trị dẫn xuất (đọc)"/>
+            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                <Button x:Name="BtnFlipLip" Content="Flip lip" Click="BtnFlipLip_Click" Padding="12,3" Margin="0,0,6,0"/>
+                <Button x:Name="BtnFlipLipSel" Content="Flip lip on selected bracket" Click="BtnFlipLipSel_Click" Padding="12,3"/>
+            </StackPanel>
+
+            <!-- 4. Preview + derived -->
+            <TextBlock Style="{StaticResource H2}" Text="4 · Preview + derived values"/>
+            <Border BorderThickness="1" CornerRadius="3" Height="210" Margin="0,0,0,6"
+                    BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}"
+                    Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+                <Image Source="{Binding PreviewImage}" Stretch="Uniform" Margin="10"/>
+            </Border>
+            <TextBlock Text="Section preview (mm) — bracket in blue; Web / Top Plate / Flange / HP in grey. Origin at Web∩TopPlate."
+                       FontSize="9" Margin="0,0,0,4" TextWrapping="Wrap"
+                       Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
             <Border BorderThickness="1" CornerRadius="3" Padding="6"
                     BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}"
                     Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
@@ -94,8 +120,8 @@
             <TextBlock Text="{Binding WarningText}" Foreground="#FFD32F2F" TextWrapping="Wrap"
                        FontSize="10" Margin="0,4,0,0"/>
 
-            <!-- 5. Chèn -->
-            <Button x:Name="BtnInsert" Content="CHÈN BRACKET" Height="34" Margin="0,12,0,0"
+            <!-- 5. Insert -->
+            <Button x:Name="BtnInsert" Content="INSERT BRACKET" Height="34" Margin="0,12,0,0"
                     FontWeight="Bold" Background="#FF228B22" Foreground="White" BorderThickness="0"
                     IsEnabled="{Binding CanInsert}" Click="BtnInsert_Click"/>
             <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" FontSize="10" Margin="0,6,0,0"

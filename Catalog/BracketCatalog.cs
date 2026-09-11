@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using BracketLibraryInventorPlugin.Models;
@@ -16,6 +17,10 @@ namespace BracketLibraryInventorPlugin.Catalog
         public static IReadOnlyList<BracketDefinition> All => _all;
 
         public static BracketDefinition Get(BracketType type) => _all.First(d => d.Type == type);
+
+        /// <summary>Tra theo Nhóm + bậc chiều dày (6 / 10). UI Phase 5b tách "Loại" thành 2 combo.</summary>
+        public static BracketDefinition Get(BracketFamily family, double thicknessMm) =>
+            _all.First(d => d.Family == family && Math.Abs(d.NominalThicknessMm - thicknessMm) < 0.1);
 
         public static IEnumerable<BracketDefinition> ByFamily(BracketFamily family) =>
             _all.Where(d => d.Family == family);
